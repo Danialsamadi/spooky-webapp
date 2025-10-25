@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Blog Home</title>
+    <style>
+        body {
+            font-family: 'Courier New', monospace;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #0a0a0a;
+            color: #e0e0e0;
+            min-height: 100vh;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            background: #1a1a1a;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.5);
+            border: 1px solid #333;
+        }
+        .header h1 { 
+            margin: 0; 
+            color: #00ff41; 
+            text-shadow: 0 0 10px #00ff41;
+            font-size: 2.5em;
+        }
+        .nav a {
+            margin-left: 15px;
+            text-decoration: none;
+            color: #00ff41;
+            padding: 8px 15px;
+            border-radius: 4px;
+            border: 1px solid #00ff41;
+            transition: all 0.3s;
+        }
+        .nav a:hover {
+            background: #00ff41;
+            color: #0a0a0a;
+            box-shadow: 0 0 15px #00ff41;
+        }
+        .post {
+            background: #1a1a1a;
+            border-radius: 8px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.5);
+            border: 1px solid #333;
+            transition: all 0.3s;
+        }
+        .post:hover {
+            border-color: #00ff41;
+            box-shadow: 0 0 20px rgba(0,255,65,0.3);
+        }
+        .post h2 {
+            margin-top: 0;
+            color: #00ff41;
+            text-shadow: 0 0 5px #00ff41;
+        }
+        .post-content {
+            color: #b0b0b0;
+            line-height: 1.6;
+            margin: 15px 0;
+        }
+        .post-meta {
+            color: #666;
+            font-size: 0.9em;
+            border-top: 1px solid #333;
+            padding-top: 10px;
+            margin-top: 15px;
+        }
+        .actions {
+            margin-top: 15px;
+        }
+        .actions a {
+            text-decoration: none;
+            color: #00ff41;
+            margin-right: 15px;
+            padding: 5px 10px;
+            border: 1px solid #00ff41;
+            border-radius: 4px;
+            font-size: 0.9em;
+            transition: all 0.3s;
+        }
+        .actions a:hover {
+            background: #00ff41;
+            color: #0a0a0a;
+            box-shadow: 0 0 10px #00ff41;
+        }
+        .actions a.delete {
+            color: #ff4444;
+            border-color: #ff4444;
+        }
+        .actions a.delete:hover {
+            background: #ff4444;
+            color: #0a0a0a;
+            box-shadow: 0 0 10px #ff4444;
+        }
+        .no-posts {
+            text-align: center;
+            padding: 40px;
+            background: #1a1a1a;
+            border-radius: 8px;
+            color: #666;
+            border: 1px solid #333;
+        }
+        /* Ghost mode animations */
+        @keyframes glow {
+            0%, 100% { text-shadow: 0 0 5px #00ff41; }
+            50% { text-shadow: 0 0 20px #00ff41, 0 0 30px #00ff41; }
+        }
+        .header h1 {
+            animation: glow 3s ease-in-out infinite;
+        }
+        .ghost {
+            width: 60px;
+            height: 60px;
+            margin-right: 15px;
+            animation: float 3s ease-in-out infinite;
+        }
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+        .loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #0a0a0a;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            transition: opacity 0.5s ease-out;
+        }
+        .loading-ghost {
+            width: 100px;
+            height: 100px;
+            animation: float 2s ease-in-out infinite, glow 2s ease-in-out infinite;
+            margin-bottom: 20px;
+        }
+        .loading-text {
+            color: #00ff41;
+            font-family: 'Courier New', monospace;
+            font-size: 18px;
+            text-shadow: 0 0 10px #00ff41;
+            animation: glow 2s ease-in-out infinite;
+        }
+    </style>
+</head>
+<body>
+<!-- Loading Screen -->
+<div id="loading-screen" class="loading-screen">
+    <img src="/static/ghost.gif" alt="Loading Ghost" class="loading-ghost">
+    <div class="loading-text">Loading Spooky Content...</div>
+</div>
+
+<div class="header">
+    <div style="display: flex; align-items: center;">
+        <img src="/static/ghost.gif" alt="Ghost" class="ghost">
+        <h1>Dani's Blog</h1>
+    </div>
+    <div class="nav">
+        {{if .LoggedIn}}
+        <a href="/post/create">New Post</a>
+        <a href="/logout">Logout</a>
+        {{else}}
+        <a href="/login">Login</a>
+        <a href="/signup">Sign Up</a>
+        {{end}}
+    </div>
+</div>
+
+{{if .Posts}}
+{{range .Posts}}
+<div class="post">
+    <h2>{{.Title}}</h2>
+    <div class="post-content">{{.Content}}</div>
+    <div class="post-meta">
+        By <strong>{{.Username}}</strong> on {{.CreatedAt.Format "January 2, 2006 at 3:04 PM"}}
+    </div>
+    {{if and $.LoggedIn (eq (printf "%d" .AuthorId) $.UserID)}}
+    <div class="actions">
+        <a href="/post/edit?id={{.Id}}">Edit</a>
+        <a href="/post/delete?id={{.Id}}" class="delete" onclick="return confirm('Delete this post?')">Delete</a>
+    </div>
+    {{end}}
+</div>
+{{end}}
+{{else}}
+<div class="no-posts">
+    <h2>No posts yet</h2>
+    <p>Be the first to create a post!</p>
+</div>
+{{end}}
+
+<script>
+// Ghost loading animation
+window.addEventListener('load', function() {
+    const loadingScreen = document.getElementById('loading-screen');
+    
+    // Show loading for 2 seconds, then fade out
+    setTimeout(function() {
+        loadingScreen.style.opacity = '0';
+        setTimeout(function() {
+            loadingScreen.style.display = 'none';
+        }, 500);
+    }, 2000);
+});
+
+// Add floating animation to header ghost
+document.addEventListener('DOMContentLoaded', function() {
+    const headerGhost = document.querySelector('.ghost');
+    if (headerGhost) {
+        headerGhost.style.animation = 'float 3s ease-in-out infinite';
+    }
+});
+</script>
+</body>
+</html>
