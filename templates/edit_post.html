@@ -75,36 +75,46 @@
         }
         .button-group {
             display: flex;
+            flex-wrap: wrap;
             gap: 15px;
             margin-top: 30px;
         }
+        
         button {
             background: #00ff41;
             color: #0a0a0a;
-            padding: 12px 25px;
+            padding: clamp(10px, 3vw, 12px) clamp(20px, 5vw, 25px);
             border: none;
             border-radius: 4px;
             cursor: pointer;
-            font-size: 16px;
+            font-size: clamp(14px, 3vw, 16px);
             font-family: 'Courier New', monospace;
             font-weight: bold;
             transition: all 0.3s;
+            flex: 1;
+            min-width: 120px;
         }
+        
         button:hover {
             background: #00cc33;
             box-shadow: 0 0 15px #00ff41;
         }
+        
         .cancel-btn {
             background: #ff4444;
             color: #0a0a0a;
             text-decoration: none;
             display: inline-block;
-            padding: 12px 25px;
+            padding: clamp(10px, 3vw, 12px) clamp(20px, 5vw, 25px);
             border-radius: 4px;
             font-family: 'Courier New', monospace;
             font-weight: bold;
             transition: all 0.3s;
+            flex: 1;
+            min-width: 120px;
+            text-align: center;
         }
+        
         .cancel-btn:hover {
             background: #cc3333;
             color: #0a0a0a;
@@ -134,13 +144,43 @@
             0%, 100% { text-shadow: 0 0 5px #00ff41; }
             50% { text-shadow: 0 0 20px #00ff41, 0 0 30px #00ff41; }
         }
+        
+        /* Responsive breakpoints */
+        @media (max-width: 768px) {
+            body {
+                padding: 15px;
+            }
+            
+            .container {
+                padding: 20px;
+            }
+            
+            .button-group {
+                flex-direction: column;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            body {
+                padding: 10px;
+            }
+            
+            .container {
+                padding: 15px;
+            }
+            
+            .header {
+                flex-direction: column;
+                text-align: center;
+            }
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <a href="/" class="back-link">← Back to Home</a>
         
-        <div style="display: flex; align-items: center; justify-content: center; margin-bottom: 20px;">
+        <div class="header">
             <img src="/static/ghost.gif" alt="Ghost" class="ghost">
             <h1>Edit Post</h1>
         </div>
