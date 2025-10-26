@@ -14,6 +14,9 @@ func main() {
 	utils.InitLogger()
 	utils.LogInfo("Application starting...")
 
+	// Test logging system
+	utils.TestLogging()
+
 	database.InitDB()
 	defer database.DB.Close()
 

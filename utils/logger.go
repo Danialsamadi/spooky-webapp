@@ -2,6 +2,7 @@ package utils
 
 import (
 	"fmt"
+	"io"
 	"log"
 	"os"
 	"time"
@@ -35,15 +36,10 @@ func InitLogger() {
 		log.Fatal("Failed to open auth log file:", err)
 	}
 
-	// Create loggers
-	InfoLogger = log.New(infoFile, "INFO: ", log.Ldate|log.Ltime|log.Lshortfile)
-	ErrorLogger = log.New(errorFile, "ERROR: ", log.Ldate|log.Ltime|log.Lshortfile)
-	AuthLogger = log.New(authFile, "AUTH: ", log.Ldate|log.Ltime|log.Lshortfile)
-
-	// Also log to console
-	InfoLogger.SetOutput(os.Stdout)
-	ErrorLogger.SetOutput(os.Stderr)
-	AuthLogger.SetOutput(os.Stdout)
+	// Create loggers that write to both files and console
+	InfoLogger = log.New(io.MultiWriter(infoFile, os.Stdout), "INFO: ", log.Ldate|log.Ltime|log.Lshortfile)
+	ErrorLogger = log.New(io.MultiWriter(errorFile, os.Stderr), "ERROR: ", log.Ldate|log.Ltime|log.Lshortfile)
+	AuthLogger = log.New(io.MultiWriter(authFile, os.Stdout), "AUTH: ", log.Ldate|log.Ltime|log.Lshortfile)
 
 	InfoLogger.Println("Logger initialized successfully")
 }
@@ -79,4 +75,11 @@ func LogLogin(username, ip string, success bool) {
 
 func LogLogout(username, ip string) {
 	LogAuth("LOGOUT", username, ip, true)
+}
+
+// TestLogging - Function to test if logging is working
+func TestLogging() {
+	LogInfo("Testing info logging...")
+	LogError("Testing error logging...")
+	LogAuth("TEST", "testuser", "127.0.0.1", true)
 }
