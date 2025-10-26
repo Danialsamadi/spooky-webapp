@@ -40,7 +40,7 @@ func HomeHandler(w http.ResponseWriter, r *http.Request) {
 
 		// note for myself: MySQL returns timestamps as []uint8, need to scan as string first
 		// then parse using Go's reference time format "2006-01-02 15:04:05"
-		err := rows.Scan(&post.Id, &post.Title, &post.Content, &post.AuthorId, &post.Username, &createdAtStr, &updatedAtStr)
+		err := rows.Scan(&post.ID, &post.Title, &post.Content, &post.AuthorID, &post.Username, &createdAtStr, &updatedAtStr)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -111,14 +111,14 @@ func EditPostHandler(w http.ResponseWriter, r *http.Request) {
 	postID := r.URL.Query().Get("id")
 	var post models.Post
 
-	err := database.DB.QueryRow("SELECT id, title, content, author_id FROM posts WHERE id = ?", postID).Scan(&post.Id, &post.Title, &post.Content, &post.AuthorId)
+	err := database.DB.QueryRow("SELECT id, title, content, author_id FROM posts WHERE id = ?", postID).Scan(&post.ID, &post.Title, &post.Content, &post.AuthorID)
 	if err != nil {
 		utils.LogError(fmt.Sprintf("Post not found for edit: ID %s by user %s from IP %s", postID, session.UserID, clientIP))
 		http.Error(w, err.Error(), http.StatusNotFound)
 		return
 	}
-	if fmt.Sprintf("%d", post.AuthorId) != session.UserID {
-		utils.LogError(fmt.Sprintf("Unauthorized edit attempt: User %s tried to edit post %s (owned by %d) from IP %s", session.UserID, postID, post.AuthorId, clientIP))
+	if fmt.Sprintf("%d", post.AuthorID) != session.UserID {
+		utils.LogError(fmt.Sprintf("Unauthorized edit attempt: User %s tried to edit post %s (owned by %d) from IP %s", session.UserID, postID, post.AuthorID, clientIP))
 		http.Error(w, "Unauthorized", http.StatusForbidden)
 		return
 	}

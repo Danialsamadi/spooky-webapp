@@ -20,9 +20,11 @@ func main() {
 	database.InitDB()
 	defer database.DB.Close()
 
-	// Static files handler for ghost.gif
+	// Static files handler for ghost.gif and uploaded files
 	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static/"))))
+	http.Handle("/uploads/", http.StripPrefix("/uploads/", http.FileServer(http.Dir("uploads/"))))
 
+	// Existing routes
 	http.HandleFunc("/", handlers.HomeHandler)
 	http.HandleFunc("/signup", handlers.SignupHandler)
 	http.HandleFunc("/login", handlers.LoginHandler)
@@ -30,6 +32,12 @@ func main() {
 	http.HandleFunc("/post/create", handlers.CreatePostHandler)
 	http.HandleFunc("/post/edit", handlers.EditPostHandler)
 	http.HandleFunc("/post/delete", handlers.DeletePostHandler)
+
+	// Profile routes
+	http.HandleFunc("/profile", handlers.ProfileHandler)
+	http.HandleFunc("/edit-profile", handlers.EditProfileHandler)
+	http.HandleFunc("/profile/delete-image", handlers.DeleteProfileImageHandler)
+	http.HandleFunc("/user", handlers.PublicProfileHandler)
 
 	fmt.Println("Server starting on :8080")
 	log.Fatal(http.ListenAndServe(":8080", nil))

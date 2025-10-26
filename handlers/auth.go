@@ -70,7 +70,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 		utils.LogInfo(fmt.Sprintf("Login attempt from IP %s for user: %s", clientIP, Username))
 
 		var user models.User
-		err := database.DB.QueryRow("SELECT id, username, password FROM users WHERE username = ?", Username).Scan(&user.Id, &user.Username, &user.Password)
+		err := database.DB.QueryRow("SELECT id, username, password FROM users WHERE username = ?", Username).Scan(&user.ID, &user.Username, &user.Password)
 		if err != nil {
 			// note for myself: Show custom spooky user not found page
 			utils.LogLogin(Username, clientIP, false)
@@ -103,7 +103,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 		token := middleware.GenerateToken()
 		middleware.Sessions[token] = &middleware.Session{
 			Token:    token,
-			UserID:   fmt.Sprintf("%d", user.Id),
+			UserID:   fmt.Sprintf("%d", user.ID),
 			ExpireAt: time.Now().Add(time.Hour * 24),
 		}
 

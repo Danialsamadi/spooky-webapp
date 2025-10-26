@@ -275,6 +275,7 @@
     <div class="nav">
         {{if .LoggedIn}}
         <a href="/post/create">New Post</a>
+        <a href="/profile">My Profile</a>
         <a href="/logout">Logout</a>
         {{else}}
         <a href="/login">Login</a>
@@ -289,12 +290,12 @@
     <h2>{{.Title}}</h2>
     <div class="post-content">{{.Content}}</div>
     <div class="post-meta">
-        By <strong>{{.Username}}</strong> on {{.CreatedAt.Format "January 2, 2006 at 3:04 PM"}}
+        By <strong><a href="/user?username={{.Username}}" style="color: #00ff41; text-decoration: none;">{{.Username}}</a></strong> on {{.CreatedAt.Format "January 2, 2006 at 3:04 PM"}}
     </div>
-    {{if and $.LoggedIn (eq (printf "%d" .AuthorId) $.UserID)}}
+    {{if and $.LoggedIn (eq (printf "%d" .AuthorID) $.UserID)}}
     <div class="actions">
-        <a href="/post/edit?id={{.Id}}">Edit</a>
-        <a href="/post/delete?id={{.Id}}" class="delete" onclick="return confirm('Delete this post?')">Delete</a>
+        <a href="/post/edit?id={{.ID}}">Edit</a>
+        <a href="/post/delete?id={{.ID}}" class="delete" onclick="return confirm('Delete this post?')">Delete</a>
     </div>
     {{end}}
 </div>

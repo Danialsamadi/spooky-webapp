@@ -73,8 +73,47 @@ func createTables() {
 		log.Fatal("Error creating posts table", err)
 	}
 	log.Println("Posts table created")
+	createProfileTables()
 	createIndexes()
+}
 
+func createProfileTables() {
+	// Add profile fields to existing users table
+	alterUsers := []string{
+		"ALTER TABLE users ADD COLUMN IF NOT EXISTS bio TEXT",
+		"ALTER TABLE users ADD COLUMN IF NOT EXISTS profile_image VARCHAR(255)",
+		"ALTER TABLE users ADD COLUMN IF NOT EXISTS location VARCHAR(100)",
+		"ALTER TABLE users ADD COLUMN IF NOT EXISTS website VARCHAR(255)",
+		"ALTER TABLE users ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP",
+	}
+
+	for _, query := range alterUsers {
+		_, err := DB.Exec(query)
+		if err != nil {
+			// Ignore if column already exists
+			log.Printf("Info: %v", err)
+		}
+	}
+
+	// Create profile_images table
+	profileImagesTable := `CREATE TABLE IF NOT EXISTS profile_images (
+		id INT AUTO_INCREMENT PRIMARY KEY,
+		user_id INT NOT NULL,
+		filename VARCHAR(255) NOT NULL,
+		original_name VARCHAR(255) NOT NULL,
+		file_path VARCHAR(500) NOT NULL,
+		file_size INT NOT NULL,
+		mime_type VARCHAR(100) NOT NULL,
+		created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+		FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+	)`
+
+	_, err := DB.Exec(profileImagesTable)
+	if err != nil {
+		log.Fatal("Error creating profile_images table:", err)
+	}
+
+	log.Println("Profile tables created successfully!")
 }
 
 func createIndexes() {

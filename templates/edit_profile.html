@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Profile - Ghost Mode</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Courier New', monospace;
+            max-width: 700px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #0a0a0a;
+            color: #e0e0e0;
+            min-height: 100vh;
+        }
+        
+        .container {
+            background: #1a1a1a;
+            padding: clamp(20px, 5vw, 30px);
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.5);
+            border: 1px solid #333;
+        }
+        
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        
+        h1 {
+            color: #00ff41;
+            text-shadow: 0 0 10px #00ff41;
+            text-align: center;
+            animation: glow 3s ease-in-out infinite;
+            font-size: clamp(1.5rem, 4vw, 2rem);
+            margin: 0;
+        }
+        
+        .ghost {
+            width: clamp(40px, 8vw, 50px);
+            height: clamp(40px, 8vw, 50px);
+            animation: float 3s ease-in-out infinite;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #00ff41;
+            text-shadow: 0 0 5px #00ff41;
+            font-weight: bold;
+            font-size: clamp(14px, 3vw, 16px);
+        }
+        
+        input, textarea {
+            width: 100%;
+            padding: clamp(10px, 3vw, 12px);
+            border: 2px solid #333;
+            border-radius: 4px;
+            box-sizing: border-box;
+            background: #0a0a0a;
+            color: #e0e0e0;
+            font-family: 'Courier New', monospace;
+            font-size: clamp(14px, 3vw, 16px);
+            transition: all 0.3s;
+        }
+        
+        input:focus, textarea:focus {
+            border-color: #00ff41;
+            outline: none;
+            box-shadow: 0 0 10px rgba(0,255,65,0.3);
+        }
+        
+        textarea {
+            min-height: clamp(80px, 15vw, 100px);
+            resize: vertical;
+        }
+        
+        .current-image {
+            margin: 10px 0;
+            text-align: center;
+        }
+        
+        .current-image img {
+            width: clamp(80px, 15vw, 100px);
+            height: clamp(80px, 15vw, 100px);
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid #00ff41;
+            box-shadow: 0 0 15px rgba(0,255,65,0.3);
+        }
+        
+        .file-input-wrapper {
+            position: relative;
+            display: inline-block;
+            width: 100%;
+        }
+        
+        .file-input-wrapper input[type=file] {
+            position: absolute;
+            opacity: 0;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+        }
+        
+        .file-input-label {
+            display: block;
+            padding: clamp(10px, 3vw, 12px);
+            background: #333;
+            border: 2px dashed #00ff41;
+            border-radius: 4px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: clamp(12px, 2.5vw, 14px);
+        }
+        
+        .file-input-label:hover {
+            background: #444;
+            border-color: #00cc33;
+        }
+        
+        .button-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-top: 30px;
+        }
+        
+        button, .btn {
+            padding: clamp(10px, 3vw, 12px) clamp(20px, 5vw, 30px);
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: clamp(14px, 3vw, 16px);
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.3s;
+            flex: 1;
+            min-width: 120px;
+            text-align: center;
+        }
+        
+        button {
+            background: #00ff41;
+            color: #0a0a0a;
+        }
+        
+        button:hover {
+            background: #00cc33;
+            box-shadow: 0 0 15px #00ff41;
+            transform: translateY(-2px);
+        }
+        
+        .btn-cancel {
+            background: #666;
+            color: #0a0a0a;
+        }
+        
+        .btn-cancel:hover {
+            background: #888;
+            box-shadow: 0 0 15px #666;
+        }
+        
+        .btn-delete {
+            background: #ff4444;
+            color: #0a0a0a;
+            padding: clamp(8px, 2vw, 10px) clamp(16px, 4vw, 20px);
+            font-size: clamp(12px, 2.5vw, 14px);
+        }
+        
+        .btn-delete:hover {
+            background: #cc3333;
+            box-shadow: 0 0 15px #ff4444;
+        }
+        
+        .help-text {
+            color: #888;
+            font-size: clamp(11px, 2vw, 12px);
+            margin-top: 5px;
+            font-style: italic;
+        }
+        
+        .back-link {
+            color: #00ff41;
+            text-decoration: none;
+            margin-bottom: 20px;
+            display: inline-block;
+            transition: all 0.3s;
+            font-size: clamp(14px, 3vw, 16px);
+        }
+        
+        .back-link:hover {
+            text-shadow: 0 0 10px #00ff41;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        @keyframes glow {
+            0%, 100% { text-shadow: 0 0 5px #00ff41; }
+            50% { text-shadow: 0 0 20px #00ff41, 0 0 30px #00ff41; }
+        }
+        
+        /* Responsive breakpoints */
+        @media (max-width: 768px) {
+            body {
+                padding: 15px;
+            }
+            
+            .container {
+                padding: 20px;
+            }
+            
+            .button-group {
+                flex-direction: column;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            body {
+                padding: 10px;
+            }
+            
+            .container {
+                padding: 15px;
+            }
+            
+            .header {
+                flex-direction: column;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="/profile" class="back-link">← Back to Profile</a>
+        
+        <div class="header">
+            <img src="/static/ghost.gif" alt="Ghost" class="ghost">
+            <h1>Edit Profile</h1>
+        </div>
+        
+        <form method="POST" enctype="multipart/form-data">
+            <div class="form-group">
+                <label for="username">Username</label>
+                <input type="text" id="username" name="username" value="{{.Username}}" required>
+            </div>
+
+            <div class="form-group">
+                <label for="bio">Bio</label>
+                <textarea id="bio" name="bio" placeholder="Tell us about yourself...">{{.Bio}}</textarea>
+                <p class="help-text">A short description about yourself</p>
+            </div>
+
+            <div class="form-group">
+                <label for="location">Location</label>
+                <input type="text" id="location" name="location" value="{{.Location}}" placeholder="e.g. New York, USA">
+            </div>
+
+            <div class="form-group">
+                <label for="website">Website</label>
+                <input type="url" id="website" name="website" value="{{.Website}}" placeholder="https://yourwebsite.com">
+            </div>
+
+            <div class="form-group">
+                <label>Profile Image</label>
+                {{if .ProfileImage}}
+                <div class="current-image">
+                    <img src="{{.ProfileImage}}" alt="Current profile">
+                    <br><br>
+                    <a href="/profile/delete-image" class="btn-delete" onclick="return confirm('Delete profile image?')">Delete Image</a>
+                </div>
+                {{end}}
+                
+                <div class="file-input-wrapper">
+                    <input type="file" id="profile_image" name="profile_image" accept="image/jpeg,image/jpg,image/png,image/gif">
+                    <label for="profile_image" class="file-input-label">
+                        📷 Click to upload new image
+                    </label>
+                </div>
+                <p class="help-text">Max size: 5MB. Formats: JPG, PNG, GIF</p>
+            </div>
+
+            <div class="button-group">
+                <button type="submit">Save Changes</button>
+                <a href="/profile" class="btn-cancel">Cancel</a>
+            </div>
+        </form>
+    </div>
+</body>
+</html>

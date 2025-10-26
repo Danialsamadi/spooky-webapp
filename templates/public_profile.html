@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{.User.Username}}'s Profile - Ghost Mode</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Courier New', monospace;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #0a0a0a;
+            color: #e0e0e0;
+            min-height: 100vh;
+        }
+        
+        .header {
+            background: #1a1a1a;
+            padding: clamp(15px, 3vw, 20px);
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.5);
+            border: 1px solid #333;
+            margin-bottom: 20px;
+        }
+        
+        .header a {
+            color: #00ff41;
+            text-decoration: none;
+            transition: all 0.3s;
+            font-size: clamp(14px, 3vw, 16px);
+        }
+        
+        .header a:hover {
+            text-shadow: 0 0 10px #00ff41;
+        }
+        
+        .profile-container {
+            background: #1a1a1a;
+            padding: clamp(20px, 5vw, 30px);
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.5);
+            border: 1px solid #333;
+        }
+        
+        .profile-header {
+            display: flex;
+            align-items: center;
+            gap: clamp(20px, 5vw, 30px);
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+        
+        .profile-image {
+            width: clamp(120px, 20vw, 150px);
+            height: clamp(120px, 20vw, 150px);
+            border-radius: 50%;
+            object-fit: cover;
+            border: 4px solid #00ff41;
+            box-shadow: 0 0 20px rgba(0,255,65,0.3);
+            animation: glow 3s ease-in-out infinite;
+        }
+        
+        .profile-image.default {
+            background: #00ff41;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #0a0a0a;
+            font-size: clamp(48px, 8vw, 64px);
+            font-weight: bold;
+            text-shadow: 0 0 10px #0a0a0a;
+        }
+        
+        .profile-info h1 {
+            margin: 0 0 10px 0;
+            color: #00ff41;
+            text-shadow: 0 0 10px #00ff41;
+            font-size: clamp(1.5rem, 4vw, 2rem);
+            animation: glow 3s ease-in-out infinite;
+        }
+        
+        .profile-info .email {
+            color: #b0b0b0;
+            margin-bottom: 5px;
+            font-size: clamp(14px, 3vw, 16px);
+        }
+        
+        .profile-info .stats {
+            color: #888;
+            font-size: clamp(12px, 2.5vw, 14px);
+            margin-bottom: 15px;
+        }
+        
+        .profile-section {
+            margin: 20px 0;
+            padding: 20px 0;
+            border-top: 1px solid #333;
+        }
+        
+        .profile-section h3 {
+            margin-top: 0;
+            color: #00ff41;
+            text-shadow: 0 0 5px #00ff41;
+            font-size: clamp(1.2rem, 3vw, 1.5rem);
+        }
+        
+        .profile-section p {
+            color: #e0e0e0;
+            line-height: 1.6;
+            font-size: clamp(14px, 3vw, 16px);
+        }
+        
+        .info-item {
+            margin: 10px 0;
+            color: #b0b0b0;
+            font-size: clamp(14px, 3vw, 16px);
+        }
+        
+        .info-item strong {
+            color: #00ff41;
+            margin-right: 10px;
+            text-shadow: 0 0 5px #00ff41;
+        }
+        
+        .info-item a {
+            color: #00ff41;
+            text-decoration: none;
+            transition: all 0.3s;
+        }
+        
+        .info-item a:hover {
+            text-shadow: 0 0 10px #00ff41;
+        }
+        
+        .posts-section {
+            margin-top: 30px;
+        }
+        
+        .post {
+            background: #2a2a2a;
+            padding: clamp(15px, 3vw, 20px);
+            margin-bottom: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #00ff41;
+            transition: all 0.3s;
+        }
+        
+        .post:hover {
+            background: #333;
+            transform: translateX(5px);
+        }
+        
+        .post h4 {
+            margin: 0 0 10px 0;
+            color: #00ff41;
+            text-shadow: 0 0 5px #00ff41;
+            font-size: clamp(1rem, 3vw, 1.2rem);
+        }
+        
+        .post p {
+            color: #e0e0e0;
+            line-height: 1.6;
+            margin: 0 0 10px 0;
+            font-size: clamp(14px, 3vw, 16px);
+        }
+        
+        .post-meta {
+            color: #888;
+            font-size: clamp(12px, 2.5vw, 14px);
+        }
+        
+        @keyframes glow {
+            0%, 100% { 
+                text-shadow: 0 0 5px #00ff41;
+                box-shadow: 0 0 20px rgba(0,255,65,0.3);
+            }
+            50% { 
+                text-shadow: 0 0 20px #00ff41, 0 0 30px #00ff41;
+                box-shadow: 0 0 30px rgba(0,255,65,0.6);
+            }
+        }
+        
+        /* Responsive breakpoints */
+        @media (max-width: 768px) {
+            body {
+                padding: 15px;
+            }
+            
+            .profile-container {
+                padding: 20px;
+            }
+            
+            .profile-header {
+                flex-direction: column;
+                text-align: center;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            body {
+                padding: 10px;
+            }
+            
+            .profile-container {
+                padding: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <a href="/">← Back to Home</a>
+    </div>
+
+    <div class="profile-container">
+        <div class="profile-header">
+            {{if .User.ProfileImage}}
+                <img src="{{.User.ProfileImage}}" alt="Profile" class="profile-image">
+            {{else}}
+                <div class="profile-image default">
+                    {{substr .User.Username 0 1 | upper}}
+                </div>
+            {{end}}
+            
+            <div class="profile-info">
+                <h1>{{.User.Username}}</h1>
+                <p class="email">{{.User.Email}}</p>
+                <p class="stats">
+                    Member since {{.User.CreatedAt.Format "January 2006"}}
+                </p>
+            </div>
+        </div>
+
+        {{if .User.Bio}}
+        <div class="profile-section">
+            <h3>Bio</h3>
+            <p>{{.User.Bio}}</p>
+        </div>
+        {{end}}
+
+        <div class="profile-section">
+            <h3>Information</h3>
+            {{if .User.Location}}
+            <div class="info-item">
+                <strong>📍 Location:</strong> {{.User.Location}}
+            </div>
+            {{end}}
+            {{if .User.Website}}
+            <div class="info-item">
+                <strong>🔗 Website:</strong> 
+                <a href="{{.User.Website}}" target="_blank">{{.User.Website}}</a>
+            </div>
+            {{end}}
+        </div>
+
+        {{if .Posts}}
+        <div class="posts-section">
+            <h3>Recent Posts</h3>
+            {{range .Posts}}
+            <div class="post">
+                <h4>{{.Title}}</h4>
+                <p>{{.Content}}</p>
+                <div class="post-meta">
+                    Posted on {{.CreatedAt.Format "January 2, 2006"}}
+                </div>
+            </div>
+            {{end}}
+        </div>
+        {{end}}
+    </div>
+</body>
+</html>

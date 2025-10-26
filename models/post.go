@@ -3,10 +3,10 @@ package models
 import "time"
 
 type Post struct {
-	Id        int
+	ID        int
 	Title     string
 	Content   string
-	AuthorId  int
+	AuthorID  int
 	Author    string
 	Username  string
 	CreatedAt time.Time
