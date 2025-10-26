@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"crypto/rand"
+	"database/sql"
 	"encoding/hex"
 	"fmt"
 	"html/template"
@@ -38,17 +39,27 @@ func ProfileHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var user models.User
+	var userID int
+	fmt.Sscanf(session.UserID, "%d", &userID)
+
+	var bio, profileImage, location, website sql.NullString
 	err := database.DB.QueryRow(`
 		SELECT id, username, email, bio, profile_image, location, website, created_at, updated_at 
-		FROM users WHERE id = ?`, session.UserID).
-		Scan(&user.ID, &user.Username, &user.Email, &user.Bio, &user.ProfileImage,
-			&user.Location, &user.Website, &user.CreatedAt, &user.UpdatedAt)
+		FROM users WHERE id = ?`, userID).
+		Scan(&user.ID, &user.Username, &user.Email, &bio, &profileImage,
+			&location, &website, &user.CreatedAt, &user.UpdatedAt)
 
 	if err != nil {
 		utils.LogError("User not found: " + err.Error())
 		http.Error(w, "User not found", http.StatusNotFound)
 		return
 	}
+
+	// Convert sql.NullString to string
+	user.Bio = bio.String
+	user.ProfileImage = profileImage.String
+	user.Location = location.String
+	user.Website = website.String
 
 	// Count user's posts
 	var postCount int
@@ -58,7 +69,22 @@ func ProfileHandler(w http.ResponseWriter, r *http.Request) {
 	clientIP := getClientIP(r)
 	utils.LogInfo(fmt.Sprintf("Profile viewed - User: %s, IP: %s", user.Username, clientIP))
 
-	tmpl := template.Must(template.ParseFiles("templates/profile.html"))
+	// Create template with custom functions
+	funcMap := template.FuncMap{
+		"substr": func(s string, start, length int) string {
+			if start >= len(s) {
+				return ""
+			}
+			end := start + length
+			if end > len(s) {
+				end = len(s)
+			}
+			return s[start:end]
+		},
+		"upper": strings.ToUpper,
+	}
+
+	tmpl := template.Must(template.New("profile.html").Funcs(funcMap).ParseFiles("templates/profile.html"))
 	data := map[string]interface{}{
 		"User":      user,
 		"PostCount": postCount,
@@ -77,11 +103,15 @@ func EditProfileHandler(w http.ResponseWriter, r *http.Request) {
 
 	if r.Method == "GET" {
 		var user models.User
+		var userID int
+		fmt.Sscanf(session.UserID, "%d", &userID)
+
+		var bio, profileImage, location, website sql.NullString
 		err := database.DB.QueryRow(`
 			SELECT id, username, email, bio, profile_image, location, website 
-			FROM users WHERE id = ?`, session.UserID).
-			Scan(&user.ID, &user.Username, &user.Email, &user.Bio,
-				&user.ProfileImage, &user.Location, &user.Website)
+			FROM users WHERE id = ?`, userID).
+			Scan(&user.ID, &user.Username, &user.Email, &bio,
+				&profileImage, &location, &website)
 
 		if err != nil {
 			utils.LogError("User not found for edit: " + err.Error())
@@ -89,7 +119,28 @@ func EditProfileHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		tmpl := template.Must(template.ParseFiles("templates/edit_profile.html"))
+		// Convert sql.NullString to string
+		user.Bio = bio.String
+		user.ProfileImage = profileImage.String
+		user.Location = location.String
+		user.Website = website.String
+
+		// Create template with custom functions
+		funcMap := template.FuncMap{
+			"substr": func(s string, start, length int) string {
+				if start >= len(s) {
+					return ""
+				}
+				end := start + length
+				if end > len(s) {
+					end = len(s)
+				}
+				return s[start:end]
+			},
+			"upper": strings.ToUpper,
+		}
+
+		tmpl := template.Must(template.New("edit_profile.html").Funcs(funcMap).ParseFiles("templates/edit_profile.html"))
 		tmpl.Execute(w, user)
 		return
 	}
@@ -144,10 +195,12 @@ func EditProfileHandler(w http.ResponseWriter, r *http.Request) {
 			}
 
 			// Save to database
+			var userID int
+			fmt.Sscanf(session.UserID, "%d", &userID)
 			_, err = database.DB.Exec(`
 				INSERT INTO profile_images (user_id, filename, original_name, file_path, file_size, mime_type) 
 				VALUES (?, ?, ?, ?, ?, ?)`,
-				session.UserID, filename, handler.Filename, filepath, written, handler.Header.Get("Content-Type"))
+				userID, filename, handler.Filename, filepath, written, handler.Header.Get("Content-Type"))
 
 			if err != nil {
 				utils.LogError("Failed to save image record: " + err.Error())
@@ -157,6 +210,8 @@ func EditProfileHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// Update user profile
+		var userID int
+		fmt.Sscanf(session.UserID, "%d", &userID)
 		query := `UPDATE users SET username = ?, bio = ?, location = ?, website = ?`
 		args := []interface{}{username, bio, location, website}
 
@@ -166,7 +221,7 @@ func EditProfileHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		query += ` WHERE id = ?`
-		args = append(args, session.UserID)
+		args = append(args, userID)
 
 		_, err = database.DB.Exec(query, args...)
 		if err != nil {
@@ -217,29 +272,31 @@ func DeleteProfileImageHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Get current profile image
-	var profileImage string
-	err := database.DB.QueryRow("SELECT profile_image FROM users WHERE id = ?", session.UserID).
+	var userID int
+	fmt.Sscanf(session.UserID, "%d", &userID)
+	var profileImage sql.NullString
+	err := database.DB.QueryRow("SELECT profile_image FROM users WHERE id = ?", userID).
 		Scan(&profileImage)
 
-	if err != nil || profileImage == "" {
+	if err != nil || !profileImage.Valid || profileImage.String == "" {
 		http.Redirect(w, r, "/profile", http.StatusSeeOther)
 		return
 	}
 
 	// Delete file from filesystem
-	filename := strings.TrimPrefix(profileImage, "/uploads/profiles/")
+	filename := strings.TrimPrefix(profileImage.String, "/uploads/profiles/")
 	filePath := filepath.Join(UploadPath, filename)
 	os.Remove(filePath)
 
 	// Update database
-	_, err = database.DB.Exec("UPDATE users SET profile_image = NULL WHERE id = ?", session.UserID)
+	_, err = database.DB.Exec("UPDATE users SET profile_image = NULL WHERE id = ?", userID)
 	if err != nil {
 		utils.LogError("Failed to delete image: " + err.Error())
 	}
 
 	// Log image deletion
 	clientIP := getClientIP(r)
-	utils.LogInfo(fmt.Sprintf("Profile image deleted - User ID: %d, IP: %s", session.UserID, clientIP))
+	utils.LogInfo(fmt.Sprintf("Profile image deleted - User ID: %s, IP: %s", session.UserID, clientIP))
 
 	http.Redirect(w, r, "/edit-profile", http.StatusSeeOther)
 }
@@ -255,17 +312,24 @@ func PublicProfileHandler(w http.ResponseWriter, r *http.Request) {
 	session, loggedIn := middleware.GetSession(r)
 
 	var user models.User
+	var bio, profileImage, location, website sql.NullString
 	err := database.DB.QueryRow(`
 		SELECT id, username, email, bio, profile_image, location, website, created_at 
 		FROM users WHERE username = ?`, username).
-		Scan(&user.ID, &user.Username, &user.Email, &user.Bio,
-			&user.ProfileImage, &user.Location, &user.Website, &user.CreatedAt)
+		Scan(&user.ID, &user.Username, &user.Email, &bio,
+			&profileImage, &location, &website, &user.CreatedAt)
 
 	if err != nil {
 		utils.LogError("Public profile not found: " + err.Error())
 		http.Error(w, "User not found", http.StatusNotFound)
 		return
 	}
+
+	// Convert sql.NullString to string
+	user.Bio = bio.String
+	user.ProfileImage = profileImage.String
+	user.Location = location.String
+	user.Website = website.String
 
 	// Get user's posts
 	rows, err := database.DB.Query(`
@@ -293,7 +357,22 @@ func PublicProfileHandler(w http.ResponseWriter, r *http.Request) {
 	clientIP := getClientIP(r)
 	utils.LogInfo(fmt.Sprintf("Public profile viewed - User: %s, Viewer IP: %s", username, clientIP))
 
-	tmpl := template.Must(template.ParseFiles("templates/public_profile.html"))
+	// Create template with custom functions
+	funcMap := template.FuncMap{
+		"substr": func(s string, start, length int) string {
+			if start >= len(s) {
+				return ""
+			}
+			end := start + length
+			if end > len(s) {
+				end = len(s)
+			}
+			return s[start:end]
+		},
+		"upper": strings.ToUpper,
+	}
+
+	tmpl := template.Must(template.New("public_profile.html").Funcs(funcMap).ParseFiles("templates/public_profile.html"))
 	data := map[string]interface{}{
 		"User":         user,
 		"Posts":        posts,

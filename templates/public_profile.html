@@ -186,6 +186,13 @@
         }
         
         /* Responsive breakpoints */
+        @media (max-width: 1024px) {
+            body {
+                max-width: 100%;
+                padding: clamp(10px, 2vw, 20px);
+            }
+        }
+        
         @media (max-width: 768px) {
             body {
                 padding: 15px;
@@ -198,6 +205,19 @@
             .profile-header {
                 flex-direction: column;
                 text-align: center;
+                gap: 20px;
+            }
+            
+            .profile-info h1 {
+                font-size: clamp(1.8rem, 5vw, 2.2rem);
+            }
+            
+            .posts-section {
+                padding: 15px;
+            }
+            
+            .posts-section h2 {
+                font-size: clamp(1.3rem, 4vw, 1.6rem);
             }
         }
         
@@ -208,6 +228,74 @@
             
             .profile-container {
                 padding: 15px;
+            }
+            
+            .profile-header {
+                gap: 15px;
+            }
+            
+            .profile-image {
+                width: clamp(100px, 25vw, 120px);
+                height: clamp(100px, 25vw, 120px);
+            }
+            
+            .profile-image.default {
+                font-size: clamp(40px, 10vw, 48px);
+            }
+            
+            .profile-info h1 {
+                font-size: clamp(1.5rem, 6vw, 1.8rem);
+            }
+            
+            .profile-info p {
+                font-size: clamp(12px, 3vw, 14px);
+            }
+            
+            .posts-section {
+                padding: 10px;
+            }
+            
+            .post-item {
+                padding: 15px;
+            }
+            
+            .post-item h3 {
+                font-size: clamp(1rem, 4vw, 1.2rem);
+            }
+            
+            .post-item p {
+                font-size: clamp(12px, 3vw, 14px);
+            }
+            
+            .post-meta {
+                font-size: clamp(10px, 2.5vw, 12px);
+            }
+        }
+        
+        @media (max-width: 320px) {
+            body {
+                padding: 5px;
+            }
+            
+            .profile-container {
+                padding: 10px;
+            }
+            
+            .profile-image {
+                width: 80px;
+                height: 80px;
+            }
+            
+            .profile-image.default {
+                font-size: 32px;
+            }
+            
+            .posts-section {
+                padding: 8px;
+            }
+            
+            .post-item {
+                padding: 12px;
             }
         }
     </style>
@@ -247,7 +335,7 @@
             <h3>Information</h3>
             {{if .User.Location}}
             <div class="info-item">
-                <strong>📍 Location:</strong> {{.User.Location}}
+                <strong>Location:</strong> {{.User.Location}}
             </div>
             {{end}}
             {{if .User.Website}}

@@ -220,6 +220,13 @@
         }
         
         /* Responsive breakpoints */
+        @media (max-width: 1024px) {
+            body {
+                max-width: 100%;
+                padding: clamp(10px, 2vw, 20px);
+            }
+        }
+        
         @media (max-width: 768px) {
             body {
                 padding: 15px;
@@ -231,6 +238,17 @@
             
             .button-group {
                 flex-direction: column;
+                gap: 10px;
+            }
+            
+            .form-group {
+                margin-bottom: 20px;
+            }
+            
+            .current-image {
+                flex-direction: column;
+                text-align: center;
+                gap: 15px;
             }
         }
         
@@ -246,6 +264,54 @@
             .header {
                 flex-direction: column;
                 text-align: center;
+                gap: 15px;
+            }
+            
+            .ghost {
+                width: clamp(30px, 6vw, 40px);
+                height: clamp(30px, 6vw, 40px);
+            }
+            
+            h1 {
+                font-size: clamp(1.3rem, 5vw, 1.8rem);
+            }
+            
+            input, textarea, select {
+                font-size: 16px; /* Prevents zoom on iOS */
+                padding: 12px;
+            }
+            
+            button {
+                width: 100%;
+                padding: 14px;
+                font-size: 16px;
+            }
+            
+            .button-group {
+                gap: 8px;
+            }
+            
+            .current-image img {
+                width: clamp(60px, 20vw, 80px);
+                height: clamp(60px, 20vw, 80px);
+            }
+        }
+        
+        @media (max-width: 320px) {
+            body {
+                padding: 5px;
+            }
+            
+            .container {
+                padding: 10px;
+            }
+            
+            .header {
+                gap: 10px;
+            }
+            
+            h1 {
+                font-size: 1.2rem;
             }
         }
     </style>

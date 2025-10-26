@@ -40,7 +40,7 @@
         }
         
         .profile-container {
-            background: #1a1a1a;
+            background: transparent;
             padding: clamp(20px, 5vw, 30px);
             border-radius: 8px;
             box-shadow: 0 4px 8px rgba(0,0,0,0.5);
@@ -184,6 +184,13 @@
         }
         
         /* Responsive breakpoints */
+        @media (max-width: 1024px) {
+            body {
+                max-width: 100%;
+                padding: clamp(10px, 2vw, 20px);
+            }
+        }
+        
         @media (max-width: 768px) {
             body {
                 padding: 15px;
@@ -196,10 +203,21 @@
             .profile-header {
                 flex-direction: column;
                 text-align: center;
+                gap: 20px;
             }
             
             .profile-actions {
                 justify-content: center;
+                flex-wrap: wrap;
+            }
+            
+            .profile-info h1 {
+                font-size: clamp(1.8rem, 5vw, 2.2rem);
+            }
+            
+            .profile-stats {
+                flex-direction: column;
+                gap: 10px;
             }
         }
         
@@ -212,8 +230,55 @@
                 padding: 15px;
             }
             
+            .profile-header {
+                gap: 15px;
+            }
+            
             .profile-actions {
                 flex-direction: column;
+                gap: 10px;
+            }
+            
+            .profile-actions a {
+                width: 100%;
+                text-align: center;
+                padding: 12px 20px;
+            }
+            
+            .profile-image {
+                width: clamp(100px, 25vw, 120px);
+                height: clamp(100px, 25vw, 120px);
+            }
+            
+            .profile-image.default {
+                font-size: clamp(40px, 10vw, 48px);
+            }
+            
+            .profile-info h1 {
+                font-size: clamp(1.5rem, 6vw, 1.8rem);
+            }
+            
+            .profile-info p {
+                font-size: clamp(12px, 3vw, 14px);
+            }
+        }
+        
+        @media (max-width: 320px) {
+            body {
+                padding: 5px;
+            }
+            
+            .profile-container {
+                padding: 10px;
+            }
+            
+            .profile-image {
+                width: 80px;
+                height: 80px;
+            }
+            
+            .profile-image.default {
+                font-size: 32px;
             }
         }
     </style>
@@ -258,7 +323,7 @@
             <h3>Information</h3>
             {{if .User.Location}}
             <div class="info-item">
-                <strong>📍 Location:</strong> {{.User.Location}}
+                <strong>Location:</strong> {{.User.Location}}
             </div>
             {{end}}
             {{if .User.Website}}
