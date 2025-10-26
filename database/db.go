@@ -79,19 +79,39 @@ func createTables() {
 
 func createProfileTables() {
 	// Add profile fields to existing users table
-	alterUsers := []string{
-		"ALTER TABLE users ADD COLUMN IF NOT EXISTS bio TEXT",
-		"ALTER TABLE users ADD COLUMN IF NOT EXISTS profile_image VARCHAR(255)",
-		"ALTER TABLE users ADD COLUMN IF NOT EXISTS location VARCHAR(100)",
-		"ALTER TABLE users ADD COLUMN IF NOT EXISTS website VARCHAR(255)",
-		"ALTER TABLE users ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP",
-	}
+	// Check if columns exist before adding them
+	columns := []string{"bio", "profile_image", "location", "website", "updated_at"}
 
-	for _, query := range alterUsers {
-		_, err := DB.Exec(query)
+	for _, column := range columns {
+		var exists int
+		err := DB.QueryRow("SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'users' AND column_name = ?", column).Scan(&exists)
+
 		if err != nil {
-			// Ignore if column already exists
-			log.Printf("Info: %v", err)
+			log.Printf("Warning: Could not check column %s: %v", column, err)
+			continue
+		}
+
+		if exists == 0 {
+			var query string
+			switch column {
+			case "bio":
+				query = "ALTER TABLE users ADD COLUMN bio TEXT"
+			case "profile_image":
+				query = "ALTER TABLE users ADD COLUMN profile_image VARCHAR(255)"
+			case "location":
+				query = "ALTER TABLE users ADD COLUMN location VARCHAR(100)"
+			case "website":
+				query = "ALTER TABLE users ADD COLUMN website VARCHAR(255)"
+			case "updated_at":
+				query = "ALTER TABLE users ADD COLUMN updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP"
+			}
+
+			_, err = DB.Exec(query)
+			if err != nil {
+				log.Printf("Warning: Could not add column %s: %v", column, err)
+			} else {
+				log.Printf("Column %s added successfully!", column)
+			}
 		}
 	}
 

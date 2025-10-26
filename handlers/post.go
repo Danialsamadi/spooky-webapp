@@ -32,7 +32,6 @@ func HomeHandler(w http.ResponseWriter, r *http.Request) {
 
 	}
 	defer rows.Close()
-
 	var posts []models.Post
 	for rows.Next() {
 		var post models.Post
