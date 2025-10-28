@@ -19,15 +19,23 @@ type User struct {
 }
 
 type InvitationCode struct {
-	ID        int       `json:"id"`
-	Code      string    `json:"code"`
-	CreatedBy int       `json:"created_by"`
-	UsedBy    *int      `json:"used_by"`
-	IsUsed    bool      `json:"is_used"`
+	ID        int        `json:"id"`
+	Code      string     `json:"code"`
+	CreatedBy int        `json:"created_by"`
+	UsedBy    *int       `json:"used_by"`
+	IsUsed    bool       `json:"is_used"`
 	ExpiresAt *time.Time `json:"expires_at"`
-	CreatedAt time.Time `json:"created_at"`
+	CreatedAt time.Time  `json:"created_at"`
 	UsedAt    *time.Time `json:"used_at"`
 }
 
 type ProfileImage struct {
 	ID           int       `json:"id"`
+	UserID       int       `json:"user_id"`
+	Filename     string    `json:"filename"`
+	OriginalName string    `json:"original_name"`
+	FilePath     string    `json:"file_path"`
+	FileSize     int       `json:"file_size"`
+	MimeType     string    `json:"mime_type"`
+	CreatedAt    time.Time `json:"created_at"`
+}
