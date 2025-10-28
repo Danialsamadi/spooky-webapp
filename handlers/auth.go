@@ -303,31 +303,3 @@ func InvitationCodeHandler(w http.ResponseWriter, r *http.Request) {
 	// Show invitation code management page
 	// You can create a template for this
 }
-
-// Add this function to create the first admin user
-func CreateFirstAdmin() {
-	// Check if any admin exists
-	var count int
-	database.DB.QueryRow("SELECT COUNT(*) FROM users WHERE is_admin = TRUE").Scan(&count)
-
-	if count == 0 {
-		// No admin exists, create one
-		password := "admin123" // Change this password!
-		hashPassword, err := middleware.HashPassword(password)
-		if err != nil {
-			utils.LogError(fmt.Sprintf("Failed to hash admin password: %v", err))
-			return
-		}
-
-		_, err = database.DB.Exec(`
-			INSERT INTO users (username, email, password, invitation_code, invited_by, is_admin) 
-			VALUES (?, ?, ?, ?, ?, ?)
-		`, "admin", "admin@example.com", hashPassword, "ADMIN-CREATED", nil, true)
-
-		if err != nil {
-			utils.LogError(fmt.Sprintf("Failed to create admin user: %v", err))
-		} else {
-			utils.LogInfo("First admin user created: admin / admin123")
-		}
-	}
-}

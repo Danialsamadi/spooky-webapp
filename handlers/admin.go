@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"html/template"
 	"net/http"
+	"strconv"
 	"time"
 	"webapp/database"
 	"webapp/middleware"
@@ -14,9 +15,10 @@ import (
 func AdminDashboardHandler(w http.ResponseWriter, r *http.Request) {
 	// Get current user info
 	session, _ := middleware.GetSession(r)
+	userID, _ := strconv.Atoi(session.UserID)
 
 	// Get invitation codes created by this admin
-	codes, err := ListInvitationCodes(session.UserID)
+	codes, err := ListInvitationCodes(userID)
 	if err != nil {
 		utils.LogError(fmt.Sprintf("Failed to get invitation codes: %v", err))
 		http.Error(w, "Database error", http.StatusInternalServerError)
@@ -31,14 +33,22 @@ func AdminDashboardHandler(w http.ResponseWriter, r *http.Request) {
 	var postCount int
 	database.DB.QueryRow("SELECT COUNT(*) FROM posts").Scan(&postCount)
 
+	// Check for success message
+	success := r.URL.Query().Get("success")
+	code := r.URL.Query().Get("code")
+
 	data := struct {
 		UserCount   int
 		PostCount   int
 		InviteCodes []models.InvitationCode
+		Success     string
+		Code        string
 	}{
 		UserCount:   userCount,
 		PostCount:   postCount,
 		InviteCodes: codes,
+		Success:     success,
+		Code:        code,
 	}
 
 	tmpl := template.Must(template.ParseFiles("templates/admin_dashboard.html"))
@@ -52,11 +62,12 @@ func GenerateInviteCodeHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	session, _ := middleware.GetSession(r)
+	userID, _ := strconv.Atoi(session.UserID)
 
 	// Set expiration to 30 days from now
 	expiresAt := time.Now().AddDate(0, 0, 30)
 
-	code, err := GenerateInvitationCode(session.UserID, &expiresAt)
+	code, err := GenerateInvitationCode(userID, &expiresAt)
 	if err != nil {
 		utils.LogError(fmt.Sprintf("Failed to generate invitation code: %v", err))
 		http.Error(w, "Failed to generate invitation code", http.StatusInternalServerError)
@@ -96,4 +107,32 @@ func AdminUsersHandler(w http.ResponseWriter, r *http.Request) {
 
 	tmpl := template.Must(template.ParseFiles("templates/admin_users.html"))
 	tmpl.Execute(w, users)
+}
+
+// CreateFirstAdmin creates the first admin user if none exists
+func CreateFirstAdmin() {
+	// Check if any admin exists
+	var count int
+	database.DB.QueryRow("SELECT COUNT(*) FROM users WHERE is_admin = TRUE").Scan(&count)
+
+	if count == 0 {
+		// No admin exists, create one
+		password := "password" // Default password
+		hashPassword, err := middleware.HashPassword(password)
+		if err != nil {
+			utils.LogError(fmt.Sprintf("Failed to hash admin password: %v", err))
+			return
+		}
+
+		_, err = database.DB.Exec(`
+			INSERT INTO users (username, email, password, invitation_code, invited_by, is_admin) 
+			VALUES (?, ?, ?, ?, ?, ?)
+		`, "admin", "admin@example.com", hashPassword, "ADMIN-CREATED", nil, true)
+
+		if err != nil {
+			utils.LogError(fmt.Sprintf("Failed to create admin user: %v", err))
+		} else {
+			utils.LogInfo("First admin user created: admin / password")
+		}
+	}
 }

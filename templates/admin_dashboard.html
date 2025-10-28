@@ -140,6 +140,14 @@
         <a href="/logout" class="logout">Logout</a>
     </div>
     
+    {{if .Success}}
+    <div style="background: #00ff41; color: #0a0a0a; padding: 15px; border-radius: 8px; margin-bottom: 20px; text-align: center; font-weight: bold;">
+        {{if eq .Success "code_generated"}}
+        ✅ Invitation code generated: {{.Code}}
+        {{end}}
+    </div>
+    {{end}}
+    
     <div class="stats">
         <div class="stat-card">
             <div class="stat-number">{{.UserCount}}</div>

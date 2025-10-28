@@ -57,6 +57,11 @@ CREATE TABLE IF NOT EXISTS invitation_codes (
 -- Add invitation_code field to users table
 ALTER TABLE users ADD COLUMN invitation_code VARCHAR(50) NULL;
 ALTER TABLE users ADD COLUMN invited_by INT NULL;
+ALTER TABLE users ADD COLUMN is_admin BOOLEAN DEFAULT FALSE;
 ALTER TABLE users ADD FOREIGN KEY (invited_by) REFERENCES users(id) ON DELETE SET NULL;
+
+-- Create first admin user
+INSERT INTO users (username, email, password, invitation_code, invited_by, is_admin) 
+VALUES ('admin', 'admin@example.com', '$2a$14$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'ADMIN-CREATED', NULL, TRUE);
 
 

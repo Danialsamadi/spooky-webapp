@@ -6,8 +6,8 @@ import (
 	"net/http"
 	"webapp/database"
 	"webapp/handlers"
-	"webapp/utils"
 	"webapp/middleware"
+	"webapp/utils"
 )
 
 func main() {

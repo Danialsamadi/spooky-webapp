@@ -18,5 +18,16 @@ type User struct {
 	UpdatedAt      time.Time `json:"updated_at"`
 }
 
+type InvitationCode struct {
+	ID        int       `json:"id"`
+	Code      string    `json:"code"`
+	CreatedBy int       `json:"created_by"`
+	UsedBy    *int      `json:"used_by"`
+	IsUsed    bool      `json:"is_used"`
+	ExpiresAt *time.Time `json:"expires_at"`
+	CreatedAt time.Time `json:"created_at"`
+	UsedAt    *time.Time `json:"used_at"`
+}
+
 type ProfileImage struct {
 	ID           int       `json:"id"`
