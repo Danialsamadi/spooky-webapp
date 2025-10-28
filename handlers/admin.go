@@ -36,6 +36,7 @@ func AdminDashboardHandler(w http.ResponseWriter, r *http.Request) {
 	// Check for success message
 	success := r.URL.Query().Get("success")
 	code := r.URL.Query().Get("code")
+	count := r.URL.Query().Get("count")
 
 	data := struct {
 		UserCount   int
@@ -43,12 +44,14 @@ func AdminDashboardHandler(w http.ResponseWriter, r *http.Request) {
 		InviteCodes []models.InvitationCode
 		Success     string
 		Code        string
+		Count       string
 	}{
 		UserCount:   userCount,
 		PostCount:   postCount,
 		InviteCodes: codes,
 		Success:     success,
 		Code:        code,
+		Count:       count,
 	}
 
 	tmpl := template.Must(template.ParseFiles("templates/admin_dashboard.html"))
@@ -135,4 +138,26 @@ func CreateFirstAdmin() {
 			utils.LogInfo("First admin user created: admin / password")
 		}
 	}
+}
+
+// CleanAllUsersHandler removes all users except admins
+func CleanAllUsersHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "POST" {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	// Delete all non-admin users
+	result, err := database.DB.Exec("DELETE FROM users WHERE is_admin = FALSE")
+	if err != nil {
+		utils.LogError(fmt.Sprintf("Failed to clean users: %v", err))
+		http.Error(w, "Failed to clean users", http.StatusInternalServerError)
+		return
+	}
+
+	rowsAffected, _ := result.RowsAffected()
+	utils.LogInfo(fmt.Sprintf("Cleaned %d users from database", rowsAffected))
+
+	// Redirect back to admin dashboard
+	http.Redirect(w, r, "/admin?success=users_cleaned&count="+fmt.Sprintf("%d", rowsAffected), http.StatusSeeOther)
 }

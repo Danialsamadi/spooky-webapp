@@ -21,9 +21,6 @@ func main() {
 	database.InitDB()
 	defer database.DB.Close()
 
-	// Create first admin if none exists
-	handlers.CreateFirstAdmin()
-
 	// Static files handler for ghost.gif and uploaded files
 	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static/"))))
 	http.Handle("/uploads/", http.StripPrefix("/uploads/", http.FileServer(http.Dir("uploads/"))))
@@ -43,11 +40,11 @@ func main() {
 	http.HandleFunc("/profile/delete-image", handlers.DeleteProfileImageHandler)
 	http.HandleFunc("/user", handlers.PublicProfileHandler)
 
-	// Add this import
-	// Add these routes after your existing routes
+	// Admin routes (protected by admin middleware)
 	http.HandleFunc("/admin", middleware.RequireAdmin(handlers.AdminDashboardHandler))
 	http.HandleFunc("/admin/generate-code", middleware.RequireAdmin(handlers.GenerateInviteCodeHandler))
 	http.HandleFunc("/admin/users", middleware.RequireAdmin(handlers.AdminUsersHandler))
+	http.HandleFunc("/admin/clean-users", middleware.RequireAdmin(handlers.CleanAllUsersHandler))
 
 	fmt.Println("Server starting on :8080")
 	log.Fatal(http.ListenAndServe(":8080", nil))

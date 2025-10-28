@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"math/rand"
 	"os"
 	"time"
 )
@@ -82,4 +83,19 @@ func TestLogging() {
 	LogInfo("Testing info logging...")
 	LogError("Testing error logging...")
 	LogAuth("TEST", "testuser", "127.0.0.1", true)
+}
+
+// GetCurrentTimestamp returns current Unix timestamp
+func GetCurrentTimestamp() int64 {
+	return time.Now().Unix()
+}
+
+// GenerateRandomString creates a random string of specified length
+func GenerateRandomString(length int) string {
+	const charset = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+	b := make([]byte, length)
+	for i := range b {
+		b[i] = charset[rand.Intn(len(charset))]
+	}
+	return string(b)
 }

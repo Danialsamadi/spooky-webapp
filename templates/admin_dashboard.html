@@ -144,6 +144,8 @@
     <div style="background: #00ff41; color: #0a0a0a; padding: 15px; border-radius: 8px; margin-bottom: 20px; text-align: center; font-weight: bold;">
         {{if eq .Success "code_generated"}}
         ✅ Invitation code generated: {{.Code}}
+        {{else if eq .Success "users_cleaned"}}
+        🗑️ Cleaned {{.Count}} users from database
         {{end}}
     </div>
     {{end}}
@@ -168,6 +170,9 @@
             <button type="submit">Generate Invite Code</button>
         </form>
         <a href="/admin/users"><button type="button">Manage Users</button></a>
+        <form method="POST" action="/admin/clean-users" style="display: inline;" onsubmit="return confirm('Are you sure you want to delete ALL non-admin users? This action cannot be undone!')">
+            <button type="submit" style="background: #ff4444; color: white;">Clean All Users</button>
+        </form>
         <a href="/"><button type="button">View Blog</button></a>
     </div>
     
