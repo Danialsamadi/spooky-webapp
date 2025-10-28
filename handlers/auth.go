@@ -23,7 +23,26 @@ func SignupHandler(w http.ResponseWriter, r *http.Request) {
 		Username := r.PostFormValue("username")
 		Email := r.PostFormValue("email")
 		Password := r.PostFormValue("password")
+		InvitationCode := r.PostFormValue("invitation_code")
 		clientIP := getClientIP(r)
+
+		// Validate invitation code
+		var invitation models.InvitationCode
+		err := database.DB.QueryRow(`
+			SELECT id, code, created_by, used_by, is_used, expires_at 
+			FROM invitation_codes 
+			WHERE code = ? AND is_used = FALSE 
+			AND (expires_at IS NULL OR expires_at > NOW())
+		`, InvitationCode).Scan(
+			&invitation.ID, &invitation.Code, &invitation.CreatedBy,
+			&invitation.UsedBy, &invitation.IsUsed, &invitation.ExpiresAt,
+		)
+
+		if err != nil {
+			utils.LogError(fmt.Sprintf("Invalid invitation code %s for user %s: %v", InvitationCode, Username, err))
+			http.Error(w, "Invalid or expired invitation code", http.StatusBadRequest)
+			return
+		}
 
 		hashPassword, err := middleware.HashPassword(Password)
 		if err != nil {
@@ -32,12 +51,21 @@ func SignupHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		// Debug: Print the original password and hash
-		fmt.Printf("Signup - Original password: '%s'\n", Password)
-		fmt.Printf("Signup - Generated hash: %s\n", hashPassword)
+		// Start transaction to ensure atomicity
+		tx, err := database.DB.Begin()
+		if err != nil {
+			utils.LogError(fmt.Sprintf("Failed to start transaction for user %s: %v", Username, err))
+			http.Error(w, "Database error", http.StatusInternalServerError)
+			return
+		}
+		defer tx.Rollback()
 
-		_, err = database.DB.Exec("INSERT INTO users (username, email, password) VALUES (?, ?, ?)",
-			Username, Email, hashPassword)
+		// Insert user with invitation code
+		result, err := tx.Exec(`
+			INSERT INTO users (username, email, password, invitation_code, invited_by) 
+			VALUES (?, ?, ?, ?, ?)
+		`, Username, Email, hashPassword, InvitationCode, invitation.CreatedBy)
+
 		if err != nil {
 			utils.LogSignup(Username, Email, clientIP, false)
 			utils.LogError(fmt.Sprintf("Signup failed for user %s: %v", Username, err))
@@ -45,9 +73,37 @@ func SignupHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+		// Get the new user ID
+		userID, err := result.LastInsertId()
+		if err != nil {
+			utils.LogError(fmt.Sprintf("Failed to get user ID for %s: %v", Username, err))
+			http.Error(w, "Database error", http.StatusInternalServerError)
+			return
+		}
+
+		// Mark invitation code as used
+		_, err = tx.Exec(`
+			UPDATE invitation_codes 
+			SET is_used = TRUE, used_by = ?, used_at = NOW() 
+			WHERE id = ?
+		`, userID, invitation.ID)
+
+		if err != nil {
+			utils.LogError(fmt.Sprintf("Failed to mark invitation code as used for user %s: %v", Username, err))
+			http.Error(w, "Database error", http.StatusInternalServerError)
+			return
+		}
+
+		// Commit transaction
+		if err = tx.Commit(); err != nil {
+			utils.LogError(fmt.Sprintf("Failed to commit transaction for user %s: %v", Username, err))
+			http.Error(w, "Database error", http.StatusInternalServerError)
+			return
+		}
+
 		// Log successful signup
 		utils.LogSignup(Username, Email, clientIP, true)
-		utils.LogInfo(fmt.Sprintf("New user registered: %s (%s)", Username, Email))
+		utils.LogInfo(fmt.Sprintf("New user registered with invitation code: %s (%s)", Username, Email))
 
 		http.Redirect(w, r, "/login", http.StatusSeeOther)
 	}
@@ -166,4 +222,112 @@ func getClientIP(r *http.Request) string {
 	// Fall back to RemoteAddr
 	ip := strings.Split(r.RemoteAddr, ":")[0]
 	return ip
+}
+
+// GenerateInvitationCode creates a new invitation code
+func GenerateInvitationCode(createdBy int, expiresAt *time.Time) (string, error) {
+	// Generate a random code (you can customize this logic)
+	code := fmt.Sprintf("INV-%d-%s", time.Now().Unix(), generateRandomString(8))
+
+	_, err := database.DB.Exec(`
+		INSERT INTO invitation_codes (code, created_by, expires_at) 
+		VALUES (?, ?, ?)
+	`, code, createdBy, expiresAt)
+
+	return code, err
+}
+
+// generateRandomString creates a random string of specified length
+func generateRandomString(length int) string {
+	const charset = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+	b := make([]byte, length)
+	for i := range b {
+		b[i] = charset[time.Now().UnixNano()%int64(len(charset))]
+	}
+	return string(b)
+}
+
+// ListInvitationCodes returns all invitation codes for a user
+func ListInvitationCodes(createdBy int) ([]models.InvitationCode, error) {
+	rows, err := database.DB.Query(`
+		SELECT id, code, created_by, used_by, is_used, expires_at, created_at, used_at
+		FROM invitation_codes 
+		WHERE created_by = ?
+		ORDER BY created_at DESC
+	`, createdBy)
+
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var codes []models.InvitationCode
+	for rows.Next() {
+		var code models.InvitationCode
+		err := rows.Scan(
+			&code.ID, &code.Code, &code.CreatedBy, &code.UsedBy,
+			&code.IsUsed, &code.ExpiresAt, &code.CreatedAt, &code.UsedAt,
+		)
+		if err != nil {
+			return nil, err
+		}
+		codes = append(codes, code)
+	}
+
+	return codes, nil
+}
+
+func InvitationCodeHandler(w http.ResponseWriter, r *http.Request) {
+	// This would require authentication middleware to get the current user
+	// For now, assuming you have a way to get the current user ID
+
+	if r.Method == "POST" {
+		// Generate new invitation code
+		// You'll need to get the current user ID from session
+		userID := 1 // Replace with actual user ID from session
+
+		// Set expiration to 30 days from now
+		expiresAt := time.Now().AddDate(0, 0, 30)
+
+		code, err := GenerateInvitationCode(userID, &expiresAt)
+		if err != nil {
+			http.Error(w, "Failed to generate invitation code", http.StatusInternalServerError)
+			return
+		}
+
+		// Return the code (you might want to show it in a template)
+		fmt.Fprintf(w, "Generated invitation code: %s", code)
+		return
+	}
+
+	// Show invitation code management page
+	// You can create a template for this
+}
+
+// Add this function to create the first admin user
+func CreateFirstAdmin() {
+	// Check if any admin exists
+	var count int
+	database.DB.QueryRow("SELECT COUNT(*) FROM users WHERE is_admin = TRUE").Scan(&count)
+
+	if count == 0 {
+		// No admin exists, create one
+		password := "admin123" // Change this password!
+		hashPassword, err := middleware.HashPassword(password)
+		if err != nil {
+			utils.LogError(fmt.Sprintf("Failed to hash admin password: %v", err))
+			return
+		}
+
+		_, err = database.DB.Exec(`
+			INSERT INTO users (username, email, password, invitation_code, invited_by, is_admin) 
+			VALUES (?, ?, ?, ?, ?, ?)
+		`, "admin", "admin@example.com", hashPassword, "ADMIN-CREATED", nil, true)
+
+		if err != nil {
+			utils.LogError(fmt.Sprintf("Failed to create admin user: %v", err))
+		} else {
+			utils.LogInfo("First admin user created: admin / admin123")
+		}
+	}
 }

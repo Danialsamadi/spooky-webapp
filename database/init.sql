@@ -39,3 +39,24 @@ CREATE INDEX idx_posts_created ON posts(created_at);
 -- INSERT INTO posts (title, content, author_id) VALUES
 -- ('Welcome to the Haunted Blog', 'This is a spooky blog built with Go and Docker!', 1),
 -- ('Ghost Mode Activated', 'The spirits are pleased with this dark theme.', 1);
+
+-- Create invitation_codes table
+CREATE TABLE IF NOT EXISTS invitation_codes (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    code VARCHAR(50) UNIQUE NOT NULL,
+    created_by INT NOT NULL,
+    used_by INT NULL,
+    is_used BOOLEAN DEFAULT FALSE,
+    expires_at TIMESTAMP NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    used_at TIMESTAMP NULL,
+    FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (used_by) REFERENCES users(id) ON DELETE SET NULL
+);
+
+-- Add invitation_code field to users table
+ALTER TABLE users ADD COLUMN invitation_code VARCHAR(50) NULL;
+ALTER TABLE users ADD COLUMN invited_by INT NULL;
+ALTER TABLE users ADD FOREIGN KEY (invited_by) REFERENCES users(id) ON DELETE SET NULL;
+
+
