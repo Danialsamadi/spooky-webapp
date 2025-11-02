@@ -1,0 +1,37 @@
+# Copy and paste these commands on your server
+
+# 1. Connect to server
+ssh DaniBlog
+
+# 2. Remove old app (if exists)
+cd /var/www
+sudo docker-compose down 2>/dev/null || true
+sudo systemctl stop webapp 2>/dev/null || true
+sudo rm -rf webapp
+
+# 3. Clone from GitHub
+sudo git clone git@github.com:Danialsamadi/spooky-webapp.git webapp
+cd webapp
+
+# 4. Create environment file
+cat > .env << 'EOF'
+DB_HOST=mysql
+DB_PORT=3306
+DB_USER=webapp
+DB_PASSWORD=webapp123
+DB_NAME=blogdb
+SESSION_SECRET=your-random-secret-key-here-change-this
+EOF
+
+# 5. Start with Docker
+sudo docker-compose up -d
+
+# 6. Watch logs (Ctrl+C to exit)
+sudo docker-compose logs -f webapp
+
+# 7. Test (in another terminal or after exiting logs)
+curl http://localhost:8080
+curl https://blog.danisdev.me
+
+# 8. Done! Visit https://blog.danisdev.me
+

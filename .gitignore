@@ -78,3 +78,7 @@ build/
 # Deployment scripts (if contains sensitive data)
 # deploy.sh
 # build-production.sh
+
+# Ignore all markdown files except README.md
+*.md
+!README.md
