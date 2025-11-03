@@ -1,0 +1,50 @@
+# Management Commands (manage.go)
+
+These commands help you manage users and invitation codes.
+
+## Create Admin User (Superuser)
+
+# Interactive (will prompt for password)
+go run manage.go createsuperuser
+
+# With all options
+go run manage.go createsuperuser -username admin -email admin@example.com -password mypassword
+
+## List Users
+
+go run manage.go listusers
+
+## Clean Non-Admin Users
+
+go run manage.go cleanusers
+# This will ask for confirmation before deleting all regular users
+
+## Generate Invitation Code
+
+go run manage.go generatecode
+# Default: created by user ID 1
+
+# Specify who creates it
+go run manage.go generatecode -created-by 1
+
+## List Invitation Codes
+
+go run manage.go listcodes
+
+## Help
+
+go run manage.go help
+
+
+═══════════════════════════════════════════════════
+
+QUICK START:
+
+1. Create your first admin user:
+   go run manage.go createsuperuser
+
+2. Generate invitation codes so others can sign up:
+   go run manage.go generatecode
+
+3. Share the code with users who want to register
+

@@ -3,7 +3,6 @@ package main
 import (
 	"flag"
 	"fmt"
-	"log"
 	"os"
 	"webapp/database"
 	"webapp/middleware"
@@ -46,7 +45,7 @@ func main() {
 
 func createSuperUser() {
 	var username, email, password string
-	
+
 	flag.StringVar(&username, "username", "admin", "Admin username")
 	flag.StringVar(&email, "email", "admin@example.com", "Admin email")
 	flag.StringVar(&password, "password", "", "Admin password")
@@ -96,7 +95,7 @@ func cleanUsers() {
 	fmt.Print("Are you sure you want to delete all non-admin users? (yes/no): ")
 	var confirm string
 	fmt.Scanln(&confirm)
-	
+
 	if confirm != "yes" {
 		fmt.Println("Operation cancelled")
 		return
@@ -134,7 +133,7 @@ func listUsers() {
 		var username, email string
 		var isAdmin bool
 		var createdAt string
-		
+
 		err := rows.Scan(&id, &username, &email, &isAdmin, &createdAt)
 		if err != nil {
 			continue
@@ -145,7 +144,7 @@ func listUsers() {
 			role = "Admin"
 		}
 
-		fmt.Printf("%-2d | %-8s | %-20s | %-5s | %s\n", 
+		fmt.Printf("%-2d | %-8s | %-20s | %-5s | %s\n",
 			id, username, email, role, createdAt)
 	}
 	fmt.Println()
@@ -171,7 +170,7 @@ func generateInviteCode() {
 
 	// Generate code
 	code := fmt.Sprintf("INV-%d-%s", utils.GetCurrentTimestamp(), utils.GenerateRandomString(8))
-	
+
 	_, err = database.DB.Exec(`
 		INSERT INTO invitation_codes (code, created_by, expires_at) 
 		VALUES (?, ?, DATE_ADD(NOW(), INTERVAL 30 DAY))
@@ -208,7 +207,7 @@ func listInviteCodes() {
 		var code string
 		var isUsed bool
 		var expiresAt, createdAt, usedAt *string
-		
+
 		err := rows.Scan(&id, &code, &createdBy, &isUsed, &expiresAt, &createdAt, &usedAt)
 		if err != nil {
 			continue
@@ -229,7 +228,7 @@ func listInviteCodes() {
 			usedAtStr = *usedAt
 		}
 
-		fmt.Printf("%-2d | %-15s | %-10d | %-4s | %-8s | %s | %s\n", 
+		fmt.Printf("%-2d | %-15s | %-10d | %-4s | %-8s | %s | %s\n",
 			id, code, createdBy, used, expires, *createdAt, usedAtStr)
 	}
 	fmt.Println()

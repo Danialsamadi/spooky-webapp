@@ -5,7 +5,6 @@ ssh DaniBlog
 
 # 2. Remove old app (if exists)
 cd /var/www
-sudo docker-compose down 2>/dev/null || true
 sudo systemctl stop webapp 2>/dev/null || true
 sudo rm -rf webapp
 
@@ -14,24 +13,47 @@ sudo git clone git@github.com:Danialsamadi/spooky-webapp.git webapp
 cd webapp
 
 # 4. Create environment file
-cat > .env << 'EOF'
-DB_HOST=mysql
-DB_PORT=3306
-DB_USER=webapp
-DB_PASSWORD=webapp123
-DB_NAME=blogdb
-SESSION_SECRET=your-random-secret-key-here-change-this
-EOF
+sudo nano .env
+# Add these lines:
+# DB_HOST=localhost
+# DB_PORT=3306
+# DB_USER=webapp
+# DB_PASSWORD=webapp123
+# DB_NAME=blogdb
+# Save with Ctrl+X, Y, Enter
 
-# 5. Start with Docker
-sudo docker-compose up -d
+# 5. Build the app (exclude manage.go)
+go build -o webapp $(ls *.go | grep -v manage.go)
 
-# 6. Watch logs (Ctrl+C to exit)
-sudo docker-compose logs -f webapp
+# 6. Make sure MySQL is running
+sudo systemctl start mysql
+sudo systemctl enable mysql
 
-# 7. Test (in another terminal or after exiting logs)
+# 7. Set permissions
+sudo chown -R www-data:www-data /var/www/webapp
+sudo chmod +x /var/www/webapp/webapp
+
+# 8. Start with systemd
+sudo systemctl start webapp
+sudo systemctl enable webapp
+
+# 9. Check status
+sudo systemctl status webapp
+
+# 10. Watch logs
+sudo journalctl -u webapp -f
+# Press Ctrl+C to exit
+
+# 11. Create superuser (admin account)
+cd /var/www/webapp
+go run manage.go createsuperuser
+# Enter your admin username, email, and password when prompted
+# Or use: go run manage.go createsuperuser -username admin -email admin@example.com -password yourpassword
+
+# 12. Test
 curl http://localhost:8080
 curl https://blog.danisdev.me
 
-# 8. Done! Visit https://blog.danisdev.me
+# 13. Done! Visit https://blog.danisdev.me
+# Login with your admin credentials at https://blog.danisdev.me/login
 
